@@ -12,6 +12,149 @@ import os
 import PIL 
 import matplotlib.pyplot as plt 
 import cv2 
+
+def CreateGrid(input_param, images=None):
+    A                    = input_param['A']
+    nex                  = input_param['nex']
+    ney                  = input_param['ney'] 
+    extension            = input_param['extension'] 
+    ox                   = input_param['ox']
+    oy                   = input_param['oy']
+    sigma_gaussian       = input_param['sigma_gaussian']   
+    interpolation        = input_param['interpolation']
+    sx                   = input_param['sx']    
+    sy                   = input_param['sy']
+    im_type              = input_param['im_type']
+    dire                 = input_param['dire']
+    file_name            = input_param['file_name']
+    
+    """ Reading the images """ 
+ 
+    iy = int ( np.ceil(A/ny) )   
+    ix = int ( iy%2*(A-(iy-1)*ny) + (iy-1)%2*(ny+1+(iy-1)*ny-A) ) 
+    
+    a_list  = np.zeros(nex*ney,dtype='int')
+    iy_list = np.zeros(nex*ney,dtype='int') 
+    ix_list = np.zeros(nex*ney,dtype='int')
+    
+    k  = 1 
+    kk = 0
+    if iy%2 ==0:
+        for i in range(iy,iy+nex):
+            if i%2 == 0  :
+                for j in range(ix,ix+ney):
+                    xn = j
+                    yn = i
+                    a = int( yn%2*(xn+(yn-1)*ny) +  (yn-1)%2*( (ny-xn+1) + (yn-1)*ny ) ) 
+                    a_list[kk]  = a
+                    iy_list[kk] = i 
+                    ix_list[kk] = j
+                    k+=1 
+                    kk+=1
+            else: 
+                for j in range(ix+ney-1,ix-1,-1):
+                    xn = j
+                    yn = i
+                    a = int( yn%2*(xn+(yn-1)*ny) +  (yn-1)%2*( (ny-xn+1) + (yn-1)*ny ) ) 
+                    a_list[kk]  = a
+                    iy_list[kk] = i
+                    ix_list[kk] = j
+                    k+=1 
+                    kk+=1
+    else :           
+        for i in range(iy,iy+nex):
+            if i%2 == 0  : 
+                for j in range(ix+ney-1,ix-1,-1):
+                    xn = j
+                    yn = i
+                    a = int( yn%2*(xn+(yn-1)*ny) +  (yn-1)%2*( (ny-xn+1) + (yn-1)*ny ) ) 
+                    a_list[kk]  = a
+                    iy_list[kk] = i
+                    ix_list[kk] = j
+                    k+=1 
+                    kk+=1
+            else: 
+                for j in range(ix,ix+ney):
+                    xn = j
+                    yn = i
+                    a = int( yn%2*(xn+(yn-1)*ny) +  (yn-1)%2*( (ny-xn+1) + (yn-1)*ny ) ) 
+                    a_list[kk]  = a
+                    iy_list[kk] = i
+                    ix_list[kk] = j
+                    k+=1 
+                    kk+=1 
+                    
+    """ Setting the initial translations   """
+    first_time = False 
+    if images is None: 
+        first_time = True 
+        images = [None]*nex*ney 
+        
+    
+    for i in range(nex*ney):
+        if first_time :
+            a = a_list[i]  
+            images[i] = corrector.Image(dire+file_name+"%03d" % (a)+'_'+im_type + extension ) 
+            images[i].Load() 
+            ix = ix_list[i]
+            iy = iy_list[i]
+            tx = (ix-1) * np.floor( sx - sx*ox/100)
+            ty = (iy-1) * np.floor( sy - sy*oy/100)
+            images[i].SetCoordinates(ty,tx)
+            images[i].SetIndices(iy-1,ix-1)   
+        images[i].Load() 
+        images[i].GaussianFilter(sigma=sigma_gaussian)
+        images[i].BuildInterp(method=interpolation)
+        # print('Image'+str(i)+','+str(iy-1)+','+str(ix-1)+','+' ty,tx='+str(images[i].ty)+','+str(images[i].tx))    
+            
+    tx0 = images[0].tx 
+    ty0 = images[0].ty 
+    for im in images: 
+        im.SetCoordinates(im.tx-tx0,im.ty-ty0)        
+        # print(' ty,tx='+str(im.ty)+','+str(im.tx))    
+ 
+
+ 
+    regions = [None]* ( nex*(ney-1) + (nex-1)*ney )
+    """ Setting the initial overlaps """ 
+    k = 0 
+    for ix in range(nex):
+        for iy in range(ney-1):
+            # Setting the horizontal overlaps between image (ix,jx) and (ix,jx+1)
+            
+            # Left  (reference) image 
+            xn = iy + 1
+            yn = ix + 1
+            a0  = int( yn%2*(xn+(yn-1)*ney) +  (yn-1)%2*( (ney-xn+1) + (yn-1)*ney ) ) 
+            
+            # Right (deformed) image 
+            xn = iy + 2 
+            yn = ix + 1 
+            a1  = int( yn%2*(xn+(yn-1)*ney) +  (yn-1)%2*( (ney-xn+1) + (yn-1)*ney ) )
+            
+            regions[k] = corrector.Region((images[a0-1], images[a1-1]),(a0-1,a1-1),'v')
+            k +=1  
+    # Horizontal overlaps
+    for iy in range(ney):
+        for ix in range(nex-1):
+            # Setting the vertical overlaps between image (ix,jx) and (ix+1,jx)
+    
+            # Top (reference) image 
+            xn = iy + 1
+            yn = ix + 1
+            a0  = int( yn%2*(xn+(yn-1)*ney) +  (yn-1)%2*( (ney-xn+1) + (yn-1)*ney ) ) 
+            
+            # Bottom (deformed) image         
+            xn = iy + 1
+            yn = ix + 2
+            a1  = int( yn%2*(xn+(yn-1)*ney) +  (yn-1)%2*( (ney-xn+1) + (yn-1)*ney ) )
+            
+            regions[k] = corrector.Region((images[a0-1], images[a1-1]),(a0-1,a1-1),'h')
+            k+=1
+    
+    grid = corrector.Grid((nx,ny),(ox,oy),(sx,sy),images,regions)
+    return grid 
+            
  
 def DistortionAdjustment(input_param, cam, images ): 
     """ Getting the registration parameters """ 
@@ -202,10 +345,13 @@ def DistortionAdjustment(input_param, cam, images ):
         for im in im_list:
             p = np.r_[p,im.tx,im.ty] 
         
+
+    
+    grid = corrector.Grid((nx,ny),(ox,oy),(sx,sy),im_list,r_list)
+    
     nd   = len(cam.p) 
     conn = np.arange(2*len(im_list)).reshape((-1,2)) + nd 
-    
-    grid = corrector.Grid((nx,ny),(ox,oy),(sx,sy),im_list,r_list,conn)
+    grid.Connectivity(conn)
     
     # grid.ReadTile(dire+'tile_corrected_sigma=0.8.txt')
     
@@ -220,7 +366,7 @@ def DistortionAdjustment(input_param, cam, images ):
     # grid.ReadTile(dire+'TileConfiguration.registered.txt')
     # grid.ReadTile(dire+'TileCorrector.txt')
     
-    
+    print('--GN')
     for ik in range(Niter):
         
         # Updating the positions of the overlapping regions 
@@ -249,22 +395,26 @@ def DistortionAdjustment(input_param, cam, images ):
             cam.p = p[:nd] 
         
     
-        err = np.linalg.norm(dp)/np.linalg.norm(p) 
+        err = np.linalg.norm(dp)/np.linalg.norm(p)
+        print('----------------------------------------')
         print("Iter # %2d | dp/p=%1.2e" % (ik + 1, err)) 
         for i,r in enumerate(r_list):
             # print("Region # %2d |s=%2.2f" % (i+1,np.std(res_tot[i])) )
             Res[i,ik] = np.std(res_tot[i]) 
-        print('Maximal residual std on regions: s=%2.2f '% np.max(Res[:,ik]))
-     
+        print('Maximal residual std on regions: %2.2f '% np.max(Res[:,ik]))
+        print('Minimal residual std on regions: %2.2f '% np.min(Res[:,ik]))
+        print('Mean residual std on regions: %2.2f' % np.mean(Res[:,ik]) )
+        print('Std residual std on regions: %2.2f' % np.std(Res[:,ik]))
+        print('----------------------------------------')
         if err < tol:
             break
         
-    return cam, images, grid  
+    return cam, images, grid, res_tot  
 
 
 
 #%% 
-""" Ep 5-3 11x11 """ 
+""" Ti6242 """ 
 nx = 10  # Number of images in each direction 
 ny = 25
 Step = 5
@@ -290,9 +440,31 @@ elif Step == 5:
 
 else:
     raise ValueError('error')
-    
-   
-    
+
+
+#%% 
+""" Ep 5-3 11x11 """ 
+nx = 11  # Number of images in each direction 
+ny = 11
+Step = 0
+
+if Step == 0:  
+    dire = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/' 
+    file_name = 'x100_11x11_stitch_A'
+    # d0 = np.array([ 3.52150029e-07,  3.61382915e-07,  1.05387843e-10,  1.04280200e-08, 1.94910898e-06,  1.91450928e-07, -2.45972757e-08,  5.65922014e-11])    
+elif Step == 1: 
+    dire = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_etap1/5-3_Rp0.1__210820_094537/intensity/' 
+    file_name = '5-3_Rp0.1__000_A'
+    # d0 = np.array([ 3.53665304e-07, -3.95685470e-08, -8.99430899e-12,  1.02952874e-08, 1.95576850e-06, -8.30114438e-08, -2.46524176e-08,  3.02392438e-12])
+elif Step == 2:
+    dire = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_etap2/210820_162553/intensity/'
+    file_name = '210820_1625_000_A' 
+    # d0 = np.array([ 3.43471798e-07,  5.40200090e-07,  2.72129188e-10,  1.04229904e-08, 3.90696908e-07,  6.75052810e-07, -2.15127081e-08,  1.26789956e-10])
+
+else:
+    raise ValueError('error')
+
+  
     
 
 #%% Parameters
@@ -301,73 +473,19 @@ else:
 # modes = 't without d0'
 # modes = 'd'
 # modes   = 't+d'
-
-d0 = np.array([ 4.32994557e-07, -6.71532622e-07,  5.13778971e-11,  1.46210186e-08,
-        6.67696569e-07, -4.94724250e-08, -1.82326908e-08,  8.80300213e-11]) 
+ 
 
 d0 = np.zeros(8)
  
 input_param = {
     
-    "A"              :  32, 
+    "A"              :  1, 
     "nex"            :  4, 
     "ney"            :  4, 
-    "ox"             :  20, 
-    "oy"             :  20,   
-    "interpolation"  :  None, 
-    "sigma_gaussian" :  None, 
-    "subsampling"    :  None, 
-    "Niter"          :  None,  
-    "modes"          :  't+d', 
-    "tol"            :  1.e-6,
-    "mx"             :  [3,5,6,7] , 
-    "my"             :  [3,4,6,7] ,
-    "d0"             :  d0, # (8 distortion parameters )
-    "dire"           :  dire, 
-    "file_name"      :  file_name, 
-    "sx"             :  1024, 
-    "sy"             :  1024,
-    "im_type"        :  'I',
-    "extension"      :  '.tif' 
-    
-    }
-
-interpolation_scales = ['linear', 'linear', 'linear', 'cubic-spline']
-subsampling_scales   = [3, 2, 1, 1]
-sigma_gauss_scales   = [2, 1.2, 0.8, 0.8] 
-Niter_scales         = [10, 10, 5, 10]
-
-
-cam0    = None 
-images0 = None 
-
-for i in range(len(subsampling_scales)):
-    print('*********** SCALE '+str(i+1)+' ***********')
-    input_param['interpolation']  = interpolation_scales[i]
-    input_param['subsampling']    = subsampling_scales[i]
-    input_param['sigma_gaussian'] = sigma_gauss_scales[i]
-    input_param['Niter']   = Niter_scales[i]
-    cam, images, grid = DistortionAdjustment(input_param, cam0, images0  ) 
-    cam0    =  cam 
-    images0 =  images 
-    
-raise ValueError('Stop')
-    
-#%% 
-""" Last stitching step, Getting all the translations  """
-
-d0 = np.array([ 4.28958495e-07, -6.01077789e-07,  1.00164217e-10,  1.47355848e-08,
-                6.32162588e-07, -6.22241822e-08, -1.84306000e-08,  1.12761181e-10])
- 
-input_param = {
-    
-    "A"              :  1, 
-    "nex"            :  10, 
-    "ney"            :  25, 
-    "ox"             :  20, 
-    "oy"             :  20,   
-    "interpolation"  :  None, 
-    "sigma_gaussian" :  None, 
+    "ox"             :  10, 
+    "oy"             :  10,   
+    "interpolation"  :  'cubic-spline', 
+    "sigma_gaussian" :  0, 
     "subsampling"    :  None, 
     "Niter"          :  None,  
     "modes"          :  't', 
@@ -385,9 +503,9 @@ input_param = {
     }
 
 interpolation_scales = ['linear', 'linear', 'linear', 'cubic-spline']
-subsampling_scales   = [4, 3, 2, 1 ]
+subsampling_scales   = [3, 2, 1, 1]
 sigma_gauss_scales   = [2, 1.2, 0.8, 0.8] 
-Niter_scales         = [10, 10, 5, 1]
+Niter_scales         = [10, 10, 5, 5]
 
 
 cam0    = None 
@@ -398,16 +516,89 @@ for i in range(len(subsampling_scales)):
     input_param['interpolation']  = interpolation_scales[i]
     input_param['subsampling']    = subsampling_scales[i]
     input_param['sigma_gaussian'] = sigma_gauss_scales[i]
+    input_param['Niter']          = Niter_scales[i]
+    cam, images, grid =  DistortionAdjustment(input_param, cam0, images0  ) 
+    cam0              =  cam 
+    images0           =  images 
+    
+raise ValueError('Stop')
+
+ 
+
+
+grid = CreateGrid( input_param ) 
+
+cam = corrector.PolynomialCamera(d0, 512, 512, [3,5,6,7], [3,4,6,7])
+
+grid.SetPairShift(cam, overlap=[10,10]) 
+
+    
+#%% 
+""" Last stitching step, Getting all the translations  """
+
+d0  = np.zeros(8)
+
+d0 = np.array([ 3.96763078e-07,  2.39404586e-08, -1.01131001e-10,  1.07496071e-08,
+        2.54048164e-06, -1.07787169e-07, -2.56639308e-08,  2.16932626e-10])
+ 
+input_param = {
+    
+    "A"              :  1, 
+    "nex"            :  11, 
+    "ney"            :  11, 
+    "ox"             :  10, 
+    "oy"             :  10,   
+    "interpolation"  :  None, 
+    "sigma_gaussian" :  None, 
+    "subsampling"    :  None, 
+    "Niter"          :  None,  
+    "modes"          :  't', 
+    "tol"            :  1.e-8,
+    "mx"             :  [3,5,6,7] , 
+    "my"             :  [3,4,6,7] ,
+    "d0"             :  d0, # (8 distortion parameters )
+    "dire"           :  dire, 
+    "file_name"      :  file_name, 
+    "sx"             :  1024, 
+    "sy"             :  1024,
+    "im_type"        :  'I',
+    "extension"      :  '.tif' 
+    
+    }
+ 
+interpolation_scales = ['linear','linear','linear', 'linear','linear']
+subsampling_scales   = [ 5, 4, 3, 2, 1 ]
+sigma_gauss_scales   = [ 4, 3, 2, 1, 0.8] 
+Niter_scales         = [ 5, 5, 5, 5, 20 ]
+ 
+cam0    = None 
+images0 = None 
+
+for i in range(len(subsampling_scales)):
+    print('*********** SCALE '+str(i+1)+' ***********')
+    input_param['interpolation']  = interpolation_scales[i]
+    input_param['subsampling']    = subsampling_scales[i]
+    input_param['sigma_gaussian'] = sigma_gauss_scales[i]
     input_param['Niter']   = Niter_scales[i]
-    cam, images, grid = DistortionAdjustment(input_param, cam0, images0  ) 
+    cam, images, grid, res_tot = DistortionAdjustment(input_param, cam0, images0  ) 
     cam0    =  cam 
     images0 =  images 
+    
+plt.figure()
+grid.PlotResidualMap(res_tot)
+plt.colorbar()
+plt.clim(-10,10)    
+
+#%% 
+    
     
 # Set tile relative to the image (0,0)    
 tx0 = images[0].tx 
 ty0 = images[0].ty 
 for im in images: 
     im.SetCoordinates(im.tx-tx0,im.ty-ty0)  
+    
+    
  
  
 fusion_mode = 'linear blending'
@@ -468,15 +659,92 @@ plt.clim(-1,1)
 import skimage
 import imreg_dft as ird
 
-skimage.registration.phase_cross_correlation(grid.regions[0].im0.pix[:, -100:],  grid.regions[0].im1.pix[:,:100 ]  )
+skimage.registration.phase_cross_correlation(grid.regions[0].im0.pix[:, -70:],  grid.regions[0].im1.pix[:,:70 ],  )
+
+skimage.registration.phase_cross_correlation(grid.regions[0].im0.pix,  grid.regions[0].im1.pix, overlap_ratio=0.3  )
+
+
+
+
 
 plt.figure() 
-plt.imshow( grid.regions[0].im0.pix[:, -100:], cmap='gray')
+plt.imshow( image1, cmap='gray')
 plt.colorbar() 
 
 plt.figure() 
-plt.imshow( grid.regions[0].im1.pix[:,:100 ], cmap='gray')
+plt.imshow( image2, cmap='gray')
 plt.colorbar() 
+
+image1FFT = np.fft.fft2(image1)
+image2FFT = np.conjugate( np.fft.fft2(image2) )
+
+imageCCor = np.real( np.fft.ifft2( (image1FFT*image2FFT) ) )
+imageCCorShift = np.fft.fftshift(imageCCor)
+
+row, col = image1.shape
+
+yShift, xShift = np.unravel_index( np.argmax(imageCCorShift), (row,col) )
+
+ 
+
+
+
+image1 = grid.regions[0].im0.pix 
+image2 = grid.regions[0].im1.pix 
+
+
+sx = 1024 ; ox = 10 
+sy = 1024 ; oy = 10 
+
+sx - sx*ox/100
+sy - sy*oy/100 
+
+ind1 = np.ix_( np.arange(image1.shape[0]), np.arange(   image1.shape[1] - int(np.ceil(sy*oy/100)), image1.shape[1] ) )
+ind2 = np.ix_( np.arange(image2.shape[0]), np.arange(  int(np.ceil(sy*oy/100))  ) )
+
+ 
+ 
+
+plt.figure()
+plt.imshow(image1[ind1]) 
+
+plt.figure()
+plt.imshow(image2[ind2])
+
+# Getting the shift between the croped images  
+
+shift,_,_ = skimage.registration.phase_cross_correlation( image1[ind1], image2[ind2], upsample_factor=100 ) 
+
+# Getting the global shift between the two images 
+
+Tx = shift[0] 
+Ty = image1.shape[1] - int(np.ceil(sy*oy/100)) + shift[1] 
+
+image2_shift = sp.ndimage.shift(image2, [Tx,Ty])
+
+ 
+
+plt.figure()
+plt.imshow( image1 ) 
+
+plt.figure()
+plt.imshow( image2 )
+
+plt.figure()
+plt.imshow(image2_shift) , cmap = 'RdBu')
+plt.colorbar()
+plt.clim(-50,50)
+
+
+
+
+
+plt.figure()
+plt.imshow(np.real(image1FFT))
+
+
+plt.figure()
+plt.imshow(np.real(image2FFT))
 
 
 
@@ -487,6 +755,43 @@ result = ird.translation(grid.regions[0].im0.pix ,  grid.regions[0].im1.pix   )
 tvec = result["tvec"].round(4)
 # the Transformed IMaGe.
 timg = ird.transform_img(im1, tvec=tvec)
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from skimage import data, io
+from skimage.feature import register_translation
+from skimage.feature.register_translation import _upsampled_dft
+from scipy.ndimage import fourier_shift
+
+image = io.imread("images/BSE.jpg")
+offset_image = io.imread("images/BSE_transl.jpg")
+# offset image translated by (-17.45, 18.75) in y and x 
+
+# subpixel precision
+#Upsample factor 100 = images will be registered to within 1/100th of a pixel.
+#Default is 1 which means no upsampling.  
+shifted, error, diffphase = register_translation(image, offset_image, 100)
+print(f"Detected subpixel offset (y, x): {shifted}")
+
+from scipy.ndimage import shift
+corrected_image = shift(offset_image, shift=(shifted[0], shifted[1]), mode='constant')
+#plt.imshow(corrected_image)
+
+fig = plt.figure(figsize=(10, 10))
+ax1 = fig.add_subplot(2,2,1)
+ax1.imshow(image, cmap='gray')
+ax1.title.set_text('Input Image')
+ax2 = fig.add_subplot(2,2,2)
+ax2.imshow(offset_image, cmap='gray')
+ax2.title.set_text('Offset image')
+ax3 = fig.add_subplot(2,2,3)
+ax3.imshow(corrected_image, cmap='gray')
+ax3.title.set_text('Corrected')
+plt.show()
+
 
 
 
@@ -502,18 +807,20 @@ Pxtot,Pytot = cam.P(xtot, ytot)
 PxInvTot, PyInvTot = cam.Pinv(xtot, ytot)
 
 plt.figure()
-plt.imshow(PxInvTot.reshape(X.shape)-X,cmap='jet')
+plt.imshow(PxInvTot.reshape(X.shape)-X,cmap='RdBu')
 cbar = plt.colorbar() 
 plt.xticks(fontsize=20)
 plt.yticks(fontsize=20)
 cbar.ax.tick_params(labelsize=20) 
+plt.axis('equal')
 
 plt.figure()
-plt.imshow(PyInvTot.reshape(Y.shape)-Y,cmap='jet')
+plt.imshow(PyInvTot.reshape(Y.shape)-Y,cmap='RdBu')
 cbar = plt.colorbar() 
 plt.xticks(fontsize=20)
 plt.yticks(fontsize=20)
 cbar.ax.tick_params(labelsize=20)
+plt.axis('equal')
 
  
  

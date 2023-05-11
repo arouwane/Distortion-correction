@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import PIL.Image as image
 import pathlib 
 import cv2 
+import skimage
 from multiprocessing import Pool 
 import concurrent.futures
 import datetime 
@@ -102,6 +103,67 @@ class Region:
         plt.plot([self.ymin,self.ymax],[self.xmax,self.xmax], color=color)
         plt.plot([self.ymin,self.ymin],[self.xmin,self.xmax], color=color)
         plt.plot([self.ymax,self.ymax],[self.xmin,self.xmax], color=color)
+        
+    def SetPairShift(self, cam, overlap):
+        """
+        Coputing the shift between the two neighboring images 
+        of the current region 
+        """
+        
+        # First getting two corrected croped regions 
+        if self.type == 'v':
+            x  =  np.arange(self.im0.pix.shape[0])
+            yl =  np.arange(self.im1.pix.shape[1] - int(np.ceil(self.im1.pix.shape[1]*overlap[1]/100)), self.im1.pix.shape[1]) # Left points 
+            yr =  np.arange( int(np.ceil(self.im1.pix.shape[1]*overlap[1]/100)) )  # Right points 
+            
+            X  = np.kron(x, np.ones(yl.size) ).reshape((-1,yl.size))
+            Yl = np.kron(np.ones(x.size),yl).reshape((x.size,-1))
+            Yr = np.kron(np.ones(x.size),yr).reshape((x.size,-1)) 
+            
+            pgul, pgvl = cam.P( X.ravel(), Yl.ravel() )
+            pgur, pgvr = cam.P( X.ravel(), Yr.ravel() )
+            
+            # Left and right images 
+            image1 = self.im0.Interp(pgul, pgvl).reshape(X.shape) 
+            image2 = self.im1.Interp(pgur, pgvr).reshape(X.shape) 
+            
+            # Performing phase shift correlation 
+            
+            shift,_,_ = skimage.registration.phase_cross_correlation( image1, image2, upsample_factor=100 ) 
+            print('Vertical overlap between image (%d,%d) and image (%d,%d)' % (self.im0.ix,self.im0.iy,self.im1.ix,self.im1.iy) )
+            print(shift) 
+             
+
+            
+            
+        elif self.type == 'h':
+            y = np.arange(self.im0.pix.shape[1]) 
+            xt = np.arange(self.im1.pix.shape[0] - int(np.ceil(self.im1.pix.shape[0]*overlap[0]/100)), self.im1.pix.shape[0]) # Top points 
+            xb = np.arange( int(np.ceil(self.im1.pix.shape[0]*overlap[0]/100)) )  # Bottom points  
+
+            Y  = np.kron(np.ones(xt.size),y).reshape((xt.size,-1)) 
+            Xt = np.kron(xt, np.ones(y.size) ).reshape((-1,y.size))
+            Xb = np.kron(xb, np.ones(y.size) ).reshape((-1,y.size)) 
+            
+            pgut, pgvt = cam.P( Xt.ravel(), Y.ravel() )
+            pgub, pgvb = cam.P( Xb.ravel(), Y.ravel() )
+            
+            # Top and bottom images 
+            image1 = self.im0.Interp(pgut, pgvt).reshape(Y.shape) 
+            image2 = self.im1.Interp(pgub, pgvb).reshape(Y.shape) 
+            
+            # Performing phase shift correlation 
+
+            shift,_,_ = skimage.registration.phase_cross_correlation( image1, image2, upsample_factor=100 ) 
+            
+            print('Horizontal overlap between image (%d,%d) and image (%d,%d)' % (self.im0.ix,self.im0.iy,self.im1.ix,self.im1.iy) )
+            print(shift)
+ 
+
+ 
+
+
+        
     
     def GetOps(self,cam):
         
@@ -165,7 +227,7 @@ class Grid:
     Totality of regions 
     Related to the distorted images to be stitched 
     """
-    def __init__(self,nImages,overlap,shape,images,regions,conn):
+    def __init__(self,nImages,overlap,shape,images,regions):
         """
         shape : (nx,ny) : number of images in x and y directions 
         overlap : (ox,oy): size of the overlap in x and y directions in % 
@@ -175,12 +237,23 @@ class Grid:
         self.sy = shape[1]
         self.images = images 
         self.regions = regions 
-        self.conn  = conn 
         self.nx = nImages[0]
         self.ny = nImages[1]
         self.ox = overlap[0]
         self.oy = overlap[1] 
     
+    def BuildInterp(self, method = 'cubic-spline'):
+        for im in self.images:
+            im.BuildInterp(method)
+    def GaussianFilter(self, sigma):
+        for im in self.images:
+            im.GaussianFilter(sigma) 
+    def LoadImages(self):
+        for im in self.images:
+            im.Load() 
+    def Connectivity(self,conn):
+        self.conn = conn 
+            
     
     def ExportTile(self, file):
         """ Writing Tile Configuration file for FIJI 
@@ -463,6 +536,9 @@ class Grid:
     #     return 
     
     def local_assembly(self,r,cam):
+        """
+        Redefined function for the parallelization 
+        """
         return r.GetOps(cam)
     
     def GetOps(self,cam):
@@ -525,6 +601,10 @@ class Grid:
     
     def RunGN(self,cam):
         return 
+    
+    def SetPairShift(self,cam,overlap):
+        for r in self.regions:
+            r.SetPairShift(cam, overlap) 
             
             
             
@@ -539,10 +619,22 @@ class Image:
         self.ty = None 
         self.ix = None 
         self.iy = None 
+        self.txr = None # Relative shift to upper image  
+        self.tyr = None # Relative shift to left image  
+        
     
     def SetCoordinates(self,tx,ty):
         self.tx = tx 
         self.ty = ty 
+    
+    def SetHorizontalShift(self,t):
+        self.tyr = t 
+    
+    def SetVerticalShift(self,t):
+        self.txr = t 
+        
+    
+    
     def SetIndices(self,ix,iy):
         self.ix = ix 
         self.iy = iy 
