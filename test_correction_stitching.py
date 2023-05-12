@@ -380,6 +380,11 @@ def DistortionAdjustment(input_param, cam, images ):
         repk = np.ix_(rep,rep) 
         Hk = H[repk]
         bk = b[rep]
+        
+        # Hkinv = np.linalg.inv(Hk)
+        # return Hkinv 
+        # raise ValueError('Stop')
+        
      
         dp = np.linalg.solve(Hk, bk)
         p[rep]  += dp 
@@ -413,8 +418,7 @@ def DistortionAdjustment(input_param, cam, images ):
 
 
 
-#%% 
-""" Ti6242 """ 
+#%% Ti6242 
 nx = 10  # Number of images in each direction 
 ny = 25
 Step = 5
@@ -441,12 +445,11 @@ elif Step == 5:
 else:
     raise ValueError('error')
 
+#%%  Ep 5-3 11x11 
 
-#%% 
-""" Ep 5-3 11x11 """ 
 nx = 11  # Number of images in each direction 
 ny = 11
-Step = 0
+Step = 1
 
 if Step == 0:  
     dire = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/' 
@@ -479,16 +482,16 @@ d0 = np.zeros(8)
  
 input_param = {
     
-    "A"              :  1, 
-    "nex"            :  4, 
-    "ney"            :  4, 
+    "A"              :  49, 
+    "nex"            :  5, 
+    "ney"            :  5, 
     "ox"             :  10, 
     "oy"             :  10,   
     "interpolation"  :  'cubic-spline', 
     "sigma_gaussian" :  0, 
     "subsampling"    :  None, 
     "Niter"          :  None,  
-    "modes"          :  't', 
+    "modes"          :  't+d', 
     "tol"            :  1.e-6,
     "mx"             :  [3,5,6,7] , 
     "my"             :  [3,4,6,7] ,
@@ -505,7 +508,7 @@ input_param = {
 interpolation_scales = ['linear', 'linear', 'linear', 'cubic-spline']
 subsampling_scales   = [3, 2, 1, 1]
 sigma_gauss_scales   = [2, 1.2, 0.8, 0.8] 
-Niter_scales         = [10, 10, 5, 5]
+Niter_scales         = [20, 20, 10, 5]
 
 
 cam0    = None 
@@ -517,7 +520,7 @@ for i in range(len(subsampling_scales)):
     input_param['subsampling']    = subsampling_scales[i]
     input_param['sigma_gaussian'] = sigma_gauss_scales[i]
     input_param['Niter']          = Niter_scales[i]
-    cam, images, grid =  DistortionAdjustment(input_param, cam0, images0  ) 
+    cam, images, grid, res_tot =  DistortionAdjustment(input_param, cam0, images0  ) 
     cam0              =  cam 
     images0           =  images 
     
@@ -531,6 +534,77 @@ grid = CreateGrid( input_param )
 cam = corrector.PolynomialCamera(d0, 512, 512, [3,5,6,7], [3,4,6,7])
 
 grid.SetPairShift(cam, overlap=[10,10]) 
+
+
+#%%  Sensitivity analysis 
+
+d0 = np.zeros(10) 
+ 
+input_param = {
+    
+    "A"              :  49, 
+    "nex"            :  3, 
+    "ney"            :  3, 
+    "ox"             :  10, 
+    "oy"             :  10,   
+    "interpolation"  :  'cubic-spline', 
+    "sigma_gaussian" :  0, 
+    "subsampling"    :  None, 
+    "Niter"          :  None,  
+    "modes"          :  't+d', 
+    "tol"            :  1.e-6,
+    "mx"             :  [3,5,6,7,9] , 
+    "my"             :  [3,4,6,7,8] ,
+    "d0"             :  d0, # (8 distortion parameters )
+    "dire"           :  dire, 
+    "file_name"      :  file_name, 
+    "sx"             :  1024, 
+    "sy"             :  1024,
+    "im_type"        :  'I',
+    "extension"      :  '.tif' 
+    
+    }
+
+interpolation_scales = ['linear', 'linear', 'linear', 'cubic-spline']
+subsampling_scales   = [3, 2, 1, 1]
+sigma_gauss_scales   = [2, 1.2, 0.8, 0.8] 
+Niter_scales         = [20, 20, 10, 5]
+
+
+cam0    = None 
+images0 = None 
+
+for i in range(len(subsampling_scales)):
+    print('*********** SCALE '+str(i+1)+' ***********')
+    input_param['interpolation']  = interpolation_scales[i]
+    input_param['subsampling']    = subsampling_scales[i]
+    input_param['sigma_gaussian'] = sigma_gauss_scales[i]
+    input_param['Niter']          = Niter_scales[i]
+    cam, images, grid, res_tot =  DistortionAdjustment(input_param, cam0, images0  ) 
+    cam0              =  cam 
+    images0           =  images 
+    
+raise ValueError('Stop')
+
+
+        
+nd = len(d0)
+rep  =  np.arange(10)
+H,b,res_tot = grid.GetOps(cam) 
+   
+repk = np.ix_(rep,rep) 
+Hk = H[repk]
+bk = b[rep]
+    
+Hinv = np.linalg.inv(H)
+
+plt.figure()
+plt.imshow(Hinv[10:20,10:20]) 
+plt.colorbar()
+plt.clim(-1.e-5,1.e-6)
+plt.title(r'$1, x, y, xy, x^2, y^2, x^2y, xy^2, x^3, y^3$')
+
+
 
     
 #%% 
@@ -860,6 +934,8 @@ np.save(dire+subdire_pp+str(nex)+'x'+str(ney)+'_A_'+str(A)+'_Cy.npy',Pytot)
 corrStep = 0 
 save_dire = os.path.dirname(os.path.dirname(dire)) + '/intensity-corrected-ParamStep'+str(corrStep)+'/'
 
+save_dire = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_etap2/210820_162553/corrected_intensity/sigma=0.8/'
+
 if not os.path.exists(save_dire):
    os.makedirs(save_dire)
    print("Saving directory "+save_dire+ "   created")
@@ -870,9 +946,8 @@ sx, sy = 1024, 1024
 xc = sx/2 ; yc = sy/2 
  
 # Step 0 parameters  
-p  = np.array([ 4.28924897e-07, -6.00557296e-07,  9.78955523e-11,  1.47382481e-08,
-                6.32208782e-07, -6.25285051e-08, -1.84309492e-08,  1.13634487e-10])
-cam = corrector.PolynomialCamera(p, xc, yc, mx, my)
+# p  = np.array([  ])
+# cam = corrector.PolynomialCamera(p, xc, yc, mx, my)
 
 x = np.arange(sx)
 y = np.arange(sy)
@@ -884,14 +959,23 @@ Pxtot,Pytot = cam.P(xtot, ytot)
 
 for i,fname in enumerate(os.listdir(dire)):
     print(i,fname)
-    im_new = corrector.Image(dire+fname)
-    im_new.Load() 
-    im_new.BuildInterp()
- 
-    imc = im_new.Interp(Pxtot, Pytot)
-    imc = imc.reshape((sx,sy)) 
-    PILimg = PIL.Image.fromarray(np.round(imc).astype("uint8"))
-    PILimg.save(save_dire+fname)  
+    if fname[-3:] == 'tif': 
+        im_new = corrector.Image(dire+fname)
+        im_new.Load() 
+        if im_new.pix.shape == (sx,sy): 
+            im_new.BuildInterp()
+            
+            im_new.GaussianFilter(sigma=0.8)
+         
+            imc = im_new.Interp(Pxtot, Pytot)
+            imc = imc.reshape((sx,sy)) 
+            
+            PILimg = PIL.Image.fromarray(np.round(imc).astype("uint8"))
+            PILimg.save(save_dire+fname)  
+        else: 
+            print("Skip file")
+    else: 
+        print("Skip file")
     
     
     # im_new.GaussianFilter(sigma=0.8)

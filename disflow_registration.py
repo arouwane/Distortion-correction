@@ -40,9 +40,45 @@ im1 = f1[repk]
  
 
 flow=cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+
+
+
+flow = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+flow.setFinestScale(0)
+
+
+flow = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+# flow = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_FAST)
+# flow = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_ULTRAFAST)
+
+# MANUAL
+# flow = cv2.DISOpticalFlow_create()
+# flow.setVariationalRefinementAlpha(20.0)		# Laplacian of displacment
+# flow.setVariationalRefinementGamma(10.0)		# Gradient of image consistency
+# flow.setVariationalRefinementDelta(5.0) 	    # Optical flow
+# flow.setVariationalRefinementIterations(5)	    # Number of iterations
+# flow.setFinestScale(0)
+# flow.setPatchSize(13)
+# flow.setPatchStride(7)
+
+print(flow.getVariationalRefinementAlpha()	)	# Laplacian of displacment
+print(flow.getVariationalRefinementGamma()	)	# Gradient of image consistency
+print(flow.getVariationalRefinementDelta() 	)    # Optical flow
+print(flow.getVariationalRefinementIterations()	 )   # Number of iterations
+print(flow.getFinestScale())
+print(flow.getPatchSize())
+print(flow.getPatchStride())
+
+
+
+
+
 u = flow.calc(im0,im1, None)
 
 ux  = u[::,::,1]; uy  = u[::,::,0]
+
+plt.figure()
+plt.imshow(ux)
  
 # c = 100
 # ux = ux[c:-c,c:-c];  uy = uy[c:-c,c:-c]
@@ -87,5 +123,7 @@ cv2.imwrite(save_dire+"Uy_"+output+"_SS="+str(N)+".tiff",Uyss)
 cv2.imwrite(save_dire+"EXX_"+output+"_SS="+str(N)+".tiff",EXX)
 cv2.imwrite(save_dire+"EYY_"+output+"_SS="+str(N)+".tiff",EYY)
 cv2.imwrite(save_dire+"EXY_"+output+"_SS="+str(N)+".tiff",EXY)
+
+cv2.imwrite(save_dire+"Ux_SCALE0_"+output+"_SS="+str(N)+".tiff",Uxss)
  
 
