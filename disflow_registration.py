@@ -30,6 +30,10 @@ else:
     raise ValueError('error')
     
 
+file0 = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/mode-influence/test2/Fused_linear_blending_Step0.tif'
+file1 = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/mode-influence/test2/Fused_linear_blending_Step1.tif'
+    
+
 f0  =  cv2.cvtColor( cv2.imread(file0), cv2.COLOR_BGR2GRAY)    # ; f0 = np.copy(f0[:3500,:5500])
 f1  =  cv2.cvtColor( cv2.imread(file1), cv2.COLOR_BGR2GRAY)    
 
@@ -127,3 +131,40 @@ cv2.imwrite(save_dire+"EXY_"+output+"_SS="+str(N)+".tiff",EXY)
 cv2.imwrite(save_dire+"Ux_SCALE0_"+output+"_SS="+str(N)+".tiff",Uxss)
  
 
+
+
+#%%
+plt.figure()
+# plt.subplot(141)
+plt.imshow(exx,cmap='RdBu')
+cbar = plt.colorbar()
+plt.clim(-0.5,0.5)
+# plt.title(r'$\frac{\partial u_x}{\partial x}$')
+
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+cbar.ax.tick_params(labelsize=20)
+
+
+plt.figure()
+# plt.subplot(141)
+plt.imshow(eyy,cmap='RdBu')
+cbar = plt.colorbar()
+plt.clim(-0.5,0.5)
+# plt.title(r'$\frac{\partial u_x}{\partial x}$')
+
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+cbar.ax.tick_params(labelsize=20)
+
+
+plt.figure()
+# plt.subplot(141)
+plt.imshow(exy,cmap='RdBu')
+cbar = plt.colorbar()
+plt.clim(-0.5,0.5)
+# plt.title(r'$\frac{\partial u_x}{\partial x}$')
+
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+cbar.ax.tick_params(labelsize=20)

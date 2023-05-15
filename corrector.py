@@ -922,6 +922,79 @@ class PolynomialCamera:
             Yold = Ynew  
             print('--Error ', error) 
         return Xold,Yold 
+    
+    def Plot(self, size):
+        x = np.arange(size[0])
+        y = np.arange(size[1])
+        X,Y = np.meshgrid(x,y,indexing='ij')
+        xtot = X.ravel() 
+        ytot = Y.ravel() 
+    
+        Pxtot,Pytot = self.P(xtot, ytot)
+    
+        plt.figure()
+        plt.imshow(Pxtot.reshape(X.shape)-X,cmap='RdBu')
+        cbar = plt.colorbar() 
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        cbar.ax.tick_params(labelsize=20) 
+        plt.axis('equal')
+        
+        plt.figure()
+        plt.imshow(Pytot.reshape(Y.shape)-Y,cmap='RdBu')
+        cbar = plt.colorbar() 
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        cbar.ax.tick_params(labelsize=20)
+        plt.axis('equal')
+    
+    def PinvGrid(self, size , alpha):
+        
+        roi = np.array([[0,0],[size[0],size[1]]])   # Plot (y,x) in inverted axis (image system)
+        m,_= MeshFromROI(roi, dx=60)
+
+        xn1, yn1  = m.n[:,0], m.n[:,1]
+        px, py = self.Pinv(m.n[:,0] , m.n[:,1]  )
+        
+        plt.figure(figsize=(10,10))
+        plt.ylim(-100,1000)
+        plt.xlim(100,200)
+        plt.gca().invert_yaxis()
+        plt.axis('equal')
+        m.Plot(n=np.c_[yn1,xn1]   , edgecolor='red', alpha=1)
+        m.Plot(n=np.c_[yn1+(py-yn1)*alpha,xn1+(px-xn1)*alpha]  , edgecolor='blue', alpha=1)
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        
+        
+        
+        
+    
+    def PlotInverse(self,size):
+        x = np.arange(size[0])
+        y = np.arange(size[1])
+        X,Y = np.meshgrid(x,y,indexing='ij')
+        xtot = X.ravel() 
+        ytot = Y.ravel() 
+    
+        PxInvTot, PyInvTot = self.Pinv(xtot, ytot)
+    
+        plt.figure()
+        plt.imshow(PxInvTot.reshape(X.shape)-X,cmap='RdBu')
+        cbar = plt.colorbar() 
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        cbar.ax.tick_params(labelsize=20) 
+        plt.axis('equal')
+        
+        plt.figure()
+        plt.imshow(PyInvTot.reshape(Y.shape)-Y,cmap='RdBu')
+        cbar = plt.colorbar() 
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        cbar.ax.tick_params(labelsize=20)
+        plt.axis('equal')
+
 
 
 class ParametricCameraBis:
@@ -1309,6 +1382,26 @@ def ReadFijiLog(file):
     
  
     
+ 
+def MeshFromROI(roi, dx, typel=3):
+    import pyxel 
+    cam = pyxel.Camera([1,0,0,np.pi/2])
+    m = pyxel.StructuredMesh(roi, dx, typel=typel)
+    return m, cam
+
+ 
+
+
+
+ 
+
+
+
+
+
+
+    
+
                
     
     

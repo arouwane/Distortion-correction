@@ -406,10 +406,11 @@ def DistortionAdjustment(input_param, cam, images ):
         for i,r in enumerate(r_list):
             # print("Region # %2d |s=%2.2f" % (i+1,np.std(res_tot[i])) )
             Res[i,ik] = np.std(res_tot[i]) 
-        print('Maximal residual std on regions: %2.2f '% np.max(Res[:,ik]))
-        print('Minimal residual std on regions: %2.2f '% np.min(Res[:,ik]))
         print('Mean residual std on regions: %2.2f' % np.mean(Res[:,ik]) )
         print('Std residual std on regions: %2.2f' % np.std(Res[:,ik]))
+        print('Maximal residual std on regions: %2.2f '% np.max(Res[:,ik]))
+        print('Minimal residual std on regions: %2.2f '% np.min(Res[:,ik]))
+
         print('----------------------------------------')
         if err < tol:
             break
@@ -449,7 +450,7 @@ else:
 
 nx = 11  # Number of images in each direction 
 ny = 11
-Step = 1
+Step = 0
 
 if Step == 0:  
     dire = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/' 
@@ -538,11 +539,11 @@ grid.SetPairShift(cam, overlap=[10,10])
 
 #%%  Sensitivity analysis 
 
-d0 = np.zeros(10) 
+d0 = np.zeros(8) 
  
 input_param = {
     
-    "A"              :  49, 
+    "A"              :  1, 
     "nex"            :  3, 
     "ney"            :  3, 
     "ox"             :  10, 
@@ -553,8 +554,9 @@ input_param = {
     "Niter"          :  None,  
     "modes"          :  't+d', 
     "tol"            :  1.e-6,
-    "mx"             :  [3,5,6,7,9] , 
-    "my"             :  [3,4,6,7,8] ,
+    # Modes          : constant, x, y, x*y, x**2, y**2, x**2*y, x*y**2, x**3, y**3
+    "mx"             :  [3,4,7,8] , 
+    "my"             :  [3,5,6,9] ,
     "d0"             :  d0, # (8 distortion parameters )
     "dire"           :  dire, 
     "file_name"      :  file_name, 
@@ -565,10 +567,10 @@ input_param = {
     
     }
 
-interpolation_scales = ['linear', 'linear', 'linear', 'cubic-spline']
-subsampling_scales   = [3, 2, 1, 1]
-sigma_gauss_scales   = [2, 1.2, 0.8, 0.8] 
-Niter_scales         = [20, 20, 10, 5]
+interpolation_scales = ['cubic-spline']
+subsampling_scales   = [ 1]
+sigma_gauss_scales   = [0.8] 
+Niter_scales         = [20]
 
 
 cam0    = None 
@@ -589,20 +591,55 @@ raise ValueError('Stop')
 
         
 nd = len(d0)
-rep  =  np.arange(10)
+rep  =  np.arange(18)
 H,b,res_tot = grid.GetOps(cam) 
    
 repk = np.ix_(rep,rep) 
 Hk = H[repk]
 bk = b[rep]
     
-Hinv = np.linalg.inv(H)
+Hkinv = np.linalg.inv(Hk)
 
 plt.figure()
-plt.imshow(Hinv[10:20,10:20]) 
+plt.imshow(np.log(np.abs(Hkinv)))  # [10:20,10:20]
 plt.colorbar()
 plt.clim(-1.e-5,1.e-6)
 plt.title(r'$1, x, y, xy, x^2, y^2, x^2y, xy^2, x^3, y^3$')
+
+plt.figure()
+uncertainty = np.abs(np.diag(Hkinv)/cam.p**2)
+plt.semilogy(uncertainty,'ko-')
+plt.semilogy(uncertainty[:9],'ro-')
+plt.title(r'$ x, y, xy, x^2, y^2, x^2y, xy^2, x^3, y^3$')
+
+
+# Plot distortion 
+cam.Plot(size=[input_param['sx'],input_param['sy']]) 
+
+cam.PinvGrid(size=[input_param['sx'],input_param['sy']], alpha=20)
+
+
+
+fusion_mode = 'linear blending'
+stitched_output_file = 'mode-influence/test1/Fused_linear_blending_Step'+str(Step)
+
+save_file = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/mode-influence/test2/Fused_linear_blending_Step'+str(Step) 
+
+# Set tile relative to image 0 
+tx0 = grid.images[0].tx 
+ty0 = grid.images[0].ty 
+for im in grid.images:
+    im.SetCoordinates(im.tx-tx0,im.ty-ty0)
+
+ims = grid.StitchImages(cam,origin=(0,0), eps=(0,0), fusion_mode=fusion_mode) 
+
+PILimg = PIL.Image.fromarray(np.round(ims).astype("uint8"))
+PILimg.save(save_file+'.tif')  
+
+
+
+
+
 
 
 
