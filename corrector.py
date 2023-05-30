@@ -10,6 +10,7 @@ import skimage
 from multiprocessing import Pool 
 import concurrent.futures
 import datetime 
+from interpylate import NLinearRegularGridInterpolator
 
   
     
@@ -292,7 +293,7 @@ class Grid:
         #                 int(self.sy*self.ny - (self.ny-1)*np.floor(self.sy*self.oy/100))+eps[1]  ) )
         # plt.imshow(A)
         for im in self.images:
-            im.PlotBox(origin,color='green')
+            im.PlotBox(origin,color='green')  
     
     def StitchImages(self, cam, origin=(0,0), eps=(0,0), fusion_mode='average'):
         for r in self.regions: 
@@ -693,6 +694,8 @@ class Image:
         self.interpMethod = method 
         if method == 'cubic-spline':
             self.tck = spi.RectBivariateSpline(x, y, self.pix, kx=3, ky=3)
+        if method == 'bilinear':
+            self.interp = NLinearRegularGridInterpolator(2)
         if method == 'linear':
             self.interp = spi.RegularGridInterpolator((x,y), self.pix, method='linear', bounds_error=False, fill_value=None)
 
@@ -712,6 +715,8 @@ class Image:
             return self.tck.ev(x, y)
         if self.interpMethod == 'linear':
             return self.interp(np.vstack((x,y)).T)
+        if self.interpMethod == 'bilinear':
+            return self.interp.evaluate(self.pix, np.vstack((x,y))) 
         # if self.interpMethod == 'nearest':
         #     # x[x<0] = 0 
         #     # y[y<0] = 0 
@@ -739,11 +744,13 @@ class Image:
             gx =   self.interp_dpixdx(np.vstack((x,y)).T)
             gy =   self.interp_dpixdy(np.vstack((x,y)).T)
             return gx,gy
+        if self.interpMethod == 'bilinear':
+            return self.interp.grad(self.pix, np.vstack((x,y))) 
         
         # if self.interpMethod=='nearest':
         #     pts = np.vstack((x,y)).T
         #     return self.interp_dpixdx(pts), self.interp_dpixdy(pts)
- 
+    
 
     def Plot(self):
         """Plot Image"""

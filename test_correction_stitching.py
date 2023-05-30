@@ -176,6 +176,9 @@ def DistortionAdjustment(input_param, cam, images ):
     mx                   = input_param['mx']
     my                   = input_param['my']
     d0                   = input_param['d0']
+    if d0 is None: 
+        d0 = np.zeros(len(mx)+len(my))
+
     dire                 = input_param['dire']
     file_name            = input_param['file_name']
  
@@ -321,7 +324,7 @@ def DistortionAdjustment(input_param, cam, images ):
     
     if first_time : 
         
-        cam  = corrector.PolynomialCamera(d0, sx/2, sy/2, mx, my)
+        cam  = corrector.PolynomialCameraNormalized(d0, sx/2, sy/2, mx, my, sx, sy)
         
         if modes == 't':
             p0 = d0
@@ -477,15 +480,13 @@ else:
 # modes = 't without d0'
 # modes = 'd'
 # modes   = 't+d'
- 
 
-d0 = np.zeros(8)
  
 input_param = {
     
     "A"              :  49, 
-    "nex"            :  5, 
-    "ney"            :  5, 
+    "nex"            :  4, 
+    "ney"            :  4, 
     "ox"             :  10, 
     "oy"             :  10,   
     "interpolation"  :  'cubic-spline', 
@@ -493,10 +494,11 @@ input_param = {
     "subsampling"    :  None, 
     "Niter"          :  None,  
     "modes"          :  't+d', 
-    "tol"            :  1.e-6,
+    "tol"            :  1.e-5,
+    # Modes          : constant, x, y, x*y, x**2, y**2, x**2*y, x*y**2, x**3, y**3
     "mx"             :  [3,5,6,7] , 
     "my"             :  [3,4,6,7] ,
-    "d0"             :  d0, # (8 distortion parameters )
+    "d0"             :  None, 
     "dire"           :  dire, 
     "file_name"      :  file_name, 
     "sx"             :  1024, 
@@ -506,10 +508,10 @@ input_param = {
     
     }
 
-interpolation_scales = ['linear', 'linear', 'linear', 'cubic-spline']
+interpolation_scales = ['bilinear', 'bilinear', 'bilinear', 'cubic-spline']
 subsampling_scales   = [3, 2, 1, 1]
 sigma_gauss_scales   = [2, 1.2, 0.8, 0.8] 
-Niter_scales         = [20, 20, 10, 5]
+Niter_scales         = [20, 20, 15, 10]
 
 
 cam0    = None 
@@ -530,11 +532,81 @@ raise ValueError('Stop')
  
 
 
+# Plot distortion 
+cam.Plot(size=[input_param['sx'],input_param['sy']]) 
+
+cam.PGrid(size=[input_param['sx'],input_param['sy']], alpha=20) 
+
+cam.PinvGrid(size=[input_param['sx'],input_param['sy']], alpha=20)
+
+
+nd = len(cam.p)
+rep  =  np.arange(nd)
+H,b,res_tot = grid.GetOps(cam) 
+
+Hinv = np.linalg.inv(H)
+repk = np.ix_(rep,rep) 
+subHinv = Hinv[repk]
+
+modes = [r'$c$', r'$x$', r'$y$', r'$xy$', r'$x^2$', r'$y^2$', r'$x^2y$', r'$xy^2$' , r'$x^3$', r'$y^3$' ]  
+diag = [ modes[i] for i in cam.mx ] + [ modes[i] for i in cam.my ]
+
+
+plt.figure()
+plt.imshow( np.log10( np.abs(subHinv) )  )
+plt.colorbar()
+plt.clim(-5,-8)
+
+for i in range(len(diag)):
+    plt.text(i, i, diag[i], color='white', ha='center', va='center', fontsize=16)
+
+
+
+#%%
+
+
+   
+repk = np.ix_(rep,rep) 
+Hk = H[repk]
+bk = b[rep]
+    
+Hkinv = np.linalg.inv(Hk)
+
+
+
+
+plt.figure()
+plt.imshow(np.log(np.abs(Hkinv)))  # [10:20,10:20]
+
+
+    
+plt.colorbar()
+plt.clim(-1.e-5,1.e-6)
+plt.title(r'$1, x, y, xy, x^2, y^2, x^2y, xy^2, x^3, y^3$')
+
+plt.figure()
+uncertainty = np.abs(np.diag(Hkinv)/cam.p**2)
+plt.semilogy(uncertainty,'ko-')
+plt.semilogy(uncertainty[:9],'ro-')
+plt.title(r'$ x, y, xy, x^2, y^2, x^2y, xy^2, x^3, y^3$')
+
+
+
+
+
+
+
+
+
 grid = CreateGrid( input_param ) 
 
 cam = corrector.PolynomialCamera(d0, 512, 512, [3,5,6,7], [3,4,6,7])
 
 grid.SetPairShift(cam, overlap=[10,10]) 
+
+
+
+
 
 
 #%%  Sensitivity analysis 
@@ -639,7 +711,8 @@ PILimg.save(save_file+'.tif')
 
 
 
-
+#%% 
+cam.Plot((input_param['sx'],input_param['sy']))
 
 
 
@@ -651,6 +724,16 @@ d0  = np.zeros(8)
 
 d0 = np.array([ 3.96763078e-07,  2.39404586e-08, -1.01131001e-10,  1.07496071e-08,
         2.54048164e-06, -1.07787169e-07, -2.56639308e-08,  2.16932626e-10])
+
+d0 = np.array([  0.38739363,  -0.44451731,  -0.1115113 ,   0.12072258,
+        11.50059871,  -0.10474628,   1.88338506,   2.54041167,
+         0.14340579,  -5.10217891, -26.94638171,   0.1867767 ,
+        26.01978099,  -9.25727934])
+
+d0 = np.array([  0.38961635,  -0.38273863,  -0.06440319,   0.16429295,
+        11.58443267,  22.60542689,  -1.00872023,   1.88810104,
+        -0.49198905,  -3.92609196, -26.36103897,   0.31914631,
+         5.37966705,  27.55425856])
  
 input_param = {
     
@@ -664,9 +747,9 @@ input_param = {
     "subsampling"    :  None, 
     "Niter"          :  None,  
     "modes"          :  't', 
-    "tol"            :  1.e-8,
-    "mx"             :  [3,5,6,7] , 
-    "my"             :  [3,4,6,7] ,
+    "tol"            :  1.e-5,
+    "mx"             :  [3,4,5,6,7,8,9] , 
+    "my"             :  [3,4,5,6,7,8,9] ,
     "d0"             :  d0, # (8 distortion parameters )
     "dire"           :  dire, 
     "file_name"      :  file_name, 
@@ -677,10 +760,10 @@ input_param = {
     
     }
  
-interpolation_scales = ['linear','linear','linear', 'linear','linear']
+interpolation_scales = ['bilinear','bilinear','bilinear', 'bilinear','cubic-spline']
 subsampling_scales   = [ 5, 4, 3, 2, 1 ]
 sigma_gauss_scales   = [ 4, 3, 2, 1, 0.8] 
-Niter_scales         = [ 5, 5, 5, 5, 20 ]
+Niter_scales         = [ 10, 10, 5, 5, 15 ]
  
 cam0    = None 
 images0 = None 
@@ -698,8 +781,13 @@ for i in range(len(subsampling_scales)):
 plt.figure()
 grid.PlotResidualMap(res_tot)
 plt.colorbar()
-plt.clim(-10,10)    
+plt.clim(-10,10)   
 
+cam.PGrid(size=(input_param['sx'],input_param['sy']), alpha = 15 ) 
+
+camp = corrector.PolynomialCameraNormalized(d0, 512, 512 , input_param['mx'], input_param['my'], 1024, 1024) 
+camp.PGrid((1024,1024), alpha=1)
+camp.Plot((1024,1024))
 #%% 
     
     
@@ -713,7 +801,8 @@ for im in images:
  
  
 fusion_mode = 'linear blending'
-stitched_output_file = 'Fused_linear_blending'
+stitched_output_file = 'Fused_linear_blending_Step1'
+save_dire = '/media/rouwane/Crucial X6/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/mode-influence/[3,4,5,6,7,8,9]/'
 ims = grid.StitchImages(cam,origin=(0,0), eps=(0,0), fusion_mode=fusion_mode) 
 
 file_fiji = '/media/rouwane/Crucial X6/_Pour Ali/DIC_HR_Ti6242_Tamb/x50-All-Steps-Stitched-Corrected-Fiji/x50-Step0.tif'
@@ -724,7 +813,7 @@ imsLap = sp.ndimage.laplace(ims)
 ims_fijiLap = sp.ndimage.laplace(ims_fiji) 
 
 PILimg = PIL.Image.fromarray(np.round(ims).astype("uint8"))
-PILimg.save(dire+fusion_mode+'.tif')   
+PILimg.save(save_dire+stitched_output_file+'.tif')   
 
 origin = (0,0)
 eps    = (0,0)
