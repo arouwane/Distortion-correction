@@ -46,9 +46,10 @@ def CreateGrid(input_param, images=None):
     interpolation        = input_param['interpolation']
     sx                   = input_param['sx']    
     sy                   = input_param['sy']
-    im_type              = input_param['im_type']
     dire                 = input_param['dire']
-    file_name            = input_param['file_name']
+    file_name0           = input_param['file_name0']
+    file_name1           = input_param['file_name1'] 
+    ndigits              = input_param['ndigits']
     nx                   = input_param['nx']
     ny                   = input_param['ny']
     
@@ -119,7 +120,7 @@ def CreateGrid(input_param, images=None):
     for i in range(nex*ney):
         if first_time :
             a = a_list[i]  
-            images[i] = Image(dire+file_name+"%03d" % (a)+'_'+im_type + extension ) 
+            images[i] = Image(dire + file_name0 + ("%0" +str(ndigits) + "d") % (a) + file_name1 + extension ) 
             images[i].Load() 
             ix = ix_list[i]
             iy = iy_list[i]
@@ -201,7 +202,6 @@ def DistortionAdjustment(input_param, cam, images, epsilon=0 ):
     interpolation        = input_param['interpolation']
     sx                   = input_param['sx']    
     sy                   = input_param['sy']
-    im_type              = input_param['im_type']
     Niter                = input_param['Niter']
     tol                  = input_param['tol']
     modes                = input_param['modes']
@@ -212,8 +212,9 @@ def DistortionAdjustment(input_param, cam, images, epsilon=0 ):
         d0 = np.zeros(len(mx)+len(my))
 
     dire                 = input_param['dire']
-    file_name            = input_param['file_name']
-    
+    file_name0           = input_param['file_name0']
+    file_name1           = input_param['file_name1']
+    ndigits              = input_param['ndigits']
     nx                   = input_param['nx']
     ny                   = input_param['ny']
  
@@ -285,7 +286,7 @@ def DistortionAdjustment(input_param, cam, images, epsilon=0 ):
     for i in range(nex*ney):
         if first_time :
             a = a_list[i]  
-            images[i] = Image(dire+file_name+"%03d" % (a)+'_'+im_type + extension ) 
+            images[i] = Image(dire + file_name0 + ("%0" +str(ndigits) + "d") % (a) + file_name1 + extension ) 
             images[i].Load() 
             ix = ix_list[i]
             iy = iy_list[i]

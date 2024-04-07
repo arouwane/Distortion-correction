@@ -12,7 +12,7 @@ import corrector
 path = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 file_name = 'speckle_image'
-im1 = PIL.Image.open(path + '/' + file_name +'_ref.tif')
+im1 = PIL.Image.open(path + '/' + file_name +'_ref.tif') 
 im1 = np.asarray(im1)    
 im1Interp = spi.RectBivariateSpline(np.arange(0, im1.shape[0]) , np.arange(0, im1.shape[1]), im1) 
 
@@ -25,6 +25,8 @@ s = 1024 # Size of a sub-image
 xc = s/2 
 yc = s/2 
 D = corrector.Projector(p, xc, yc, mx, my, s, s)  # The original correction field we are looking for 
+
+D.ShowValues() 
 
 plt.figure()
 D.Plot(size=(s,s))
@@ -59,4 +61,4 @@ for i in range(1, ni**2 + 1):
     jmin = int(ty) ;  
     images0[i-1].pix = im1Interp.ev(px + imin + i0, py + jmin + j0 ).reshape((s,s)) 
     PILimg = PIL.Image.fromarray(np.round(images0[i-1].pix).astype("uint8"))
-    PILimg.save(path + '/' + file_name + '_A%03d.tif'%i) 
+    PILimg.save(path + '/' + file_name + '_A%02d.tif'%i) 

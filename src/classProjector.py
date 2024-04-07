@@ -113,6 +113,7 @@ class Projector:
         plt.yticks(fontsize=20)
         cbar.ax.tick_params(labelsize=20) 
         plt.axis('equal')
+        plt.title('Vertical distortion')
         
         plt.figure()
         plt.imshow(Pytot.reshape(Y.shape)-Y,cmap='RdBu')
@@ -121,6 +122,7 @@ class Projector:
         plt.yticks(fontsize=20)
         cbar.ax.tick_params(labelsize=20)
         plt.axis('equal')
+        plt.title('Horizontal distortion')
 
 
     def PlotInverse(self,size):
@@ -147,4 +149,54 @@ class Projector:
         plt.yticks(fontsize=20)
         cbar.ax.tick_params(labelsize=20)
         plt.axis('equal')
+
+
+    def PlotGrid(self, size, nelemx, alpha):
+        xmin = 0 ; xmax = size[0] 
+        ymin = 0 ; ymax = size[1] 
+        nelemy = int(nelemx * size[1] / size[0])
+        x = np.linspace(xmin,xmax,nelemx+1)
+        y = np.linspace(ymin,ymax,nelemy+1) 
+        X, Y = np.meshgrid(x,y, indexing='ij') 
+        Xr = X.ravel(); Yr = Y.ravel() 
+        px, py = self.P(Xr, Yr) 
+        PX = px.reshape(X.shape) 
+        PY = py.reshape(Y.shape)
+        Xd = X + (PX-X) * alpha
+        Yd = Y + (PY-Y) * alpha 
+        
+        plt.figure() 
+        plt.plot(Y, X, '-', color='red')
+        plt.plot(Y.T, X.T, '-', color='red')
+        for i in range(nelemx+1):
+            plt.plot(Yd[i], Xd[i], '-',color='blue')
+        for i in range(nelemy+1):
+            plt.plot(Yd.T[i], Xd.T[i], '-',color='blue')
+        plt.gca().invert_yaxis()
+        plt.axis('equal') 
+    
+    def PlotInverseGrid(self, size, nelemx, alpha):
+        xmin = 0 ; xmax = size[0] 
+        ymin = 0 ; ymax = size[1] 
+        nelemy = int(nelemx * size[1] / size[0])
+        x = np.linspace(xmin,xmax, nelemx+1)
+        y = np.linspace(ymin,ymax, nelemy+1) 
+        X, Y = np.meshgrid(x,y, indexing='ij') 
+        Xr = X.ravel(); Yr = Y.ravel() 
+        px, py = self.Pinv(Xr, Yr) 
+        PX = px.reshape(X.shape) 
+        PY = py.reshape(Y.shape)
+        Xd = X + (PX-X) * alpha
+        Yd = Y + (PY-Y) * alpha 
+        
+        plt.figure() 
+        plt.plot(Y, X, '-', color='red')
+        plt.plot(Y.T, X.T, '-', color='red')
+        for i in range(nelemx+1):
+            plt.plot(Yd[i], Xd[i], '-',color='blue')
+        for i in range(nelemy+1):
+            plt.plot(Yd.T[i], Xd.T[i], '-',color='blue')
+        plt.gca().invert_yaxis()
+        plt.axis('equal') 
+        
  
