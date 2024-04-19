@@ -3,6 +3,7 @@ from classImage import Image
 from classGrid import Grid
 from classProjector import Projector
 import numpy as np  
+import scipy as sp 
  
 
 def ReadFijiLog(file):
@@ -356,8 +357,7 @@ def DistortionAdjustment(input_param, cam, images, epsilon=0 ):
     # [tx0,ty0,...,txn,tyn]  
     # Connectivity between images and the translation vector 
     # constant, x, y, xy, x², y², x²y, xy², x³, y³ 
-    
-     
+
     
     if first_time : 
         
@@ -459,6 +459,19 @@ def DistortionAdjustment(input_param, cam, images, epsilon=0 ):
             break
         
     return cam, images, grid, res_tot  
+
+
+def DistortionAdjustement_Multiscale(parameters, cam0=None, images0=None, epsilon=0): 
+    for i in range(len(parameters['subsampling_scales'])):
+        print('*********** SCALE '+str(i+1)+' ***********')
+        parameters['interpolation']   = parameters['interpolation_scales'][i]
+        parameters['subsampling']     = parameters['subsampling_scales'][i]
+        parameters['sigma_gaussian']  = parameters['sigma_gauss_scales'][i]
+        parameters['Niter']           = parameters['Niter_scales'][i]
+        cam, images, grid, res_tot    = DistortionAdjustment(parameters, cam0, images0, epsilon) 
+        cam0              =  cam     
+        images0           =  images 
+    return cam, images, grid, res_tot 
 
 
 

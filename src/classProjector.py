@@ -7,18 +7,18 @@ class Projector:
     constant, x, y, x*y, x**2, y**2, x**2*y, x*y**2, x**3, y**3 
     """
     def __init__(self, p, xc, yc, mx, my, lx, ly):
-        self.p  = p 
+        self.p  = p  
         self.mx = mx 
         self.my = my 
         self.xc = xc 
         self.yc = yc 
-        self.lx = lx 
+        self.lx = lx   
         self.ly = ly 
     
     def ShowValues(self):
-        n = len(self.mx)
-        px = self.p[:n]
-        py = self.p[n:]
+        n = len(self.mx) 
+        px = self.p[:n] 
+        py = self.p[n:] 
         modes = ['c', 'x', 'y', 'x*y', 'x**2', 'y**2', 'x**2*y', 'x*y**2', 'x**3', 'y**3' ]  
         print('X:  ', end= ''); [print(modes[self.mx[i]], end='  ') for i in range(len(self.mx))] 
         print("\n",px)
