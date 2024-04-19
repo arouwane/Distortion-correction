@@ -109,7 +109,7 @@ other stitching tools such as the fiji plugin
 """
 fname = 'mosaic'
 
-grid.ExportTile('TileConfiguration.txt')  # Exporting Tile 
+grid.ExportTile(parameters['dire']+'TileConfiguration.txt')  # Exporting Tile 
 
 ims_unc = grid.StitchImages(fusion_mode='average') # Stitching the mosaic without correction 
 PILimg = PIL.Image.fromarray(np.round(ims_unc).astype("uint8"))
