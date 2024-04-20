@@ -1,0 +1,16 @@
+# Define the number of dimensions we are working on
+dim = 2
+
+# Define the image coordinates
+x100_epr-jerem_10pct_002_A001_I.tif; ; (-0.085707,-0.029249)
+x100_epr-jerem_10pct_002_A002_I.tif; ; (922.528504,0.058766)
+x100_epr-jerem_10pct_002_A003_I.tif; ; (1848.249363,0.225468)
+x100_epr-jerem_10pct_002_A004_I.tif; ; (2770.624926,0.414901)
+x100_epr-jerem_10pct_002_A005_I.tif; ; (2771.831454,924.860484)
+x100_epr-jerem_10pct_002_A006_I.tif; ; (1851.427149,924.863686)
+x100_epr-jerem_10pct_002_A007_I.tif; ; (925.670887,924.874407)
+x100_epr-jerem_10pct_002_A008_I.tif; ; (2.152781,924.818658)
+x100_epr-jerem_10pct_002_A009_I.tif; ; (3.806541,1844.089872)
+x100_epr-jerem_10pct_002_A010_I.tif; ; (925.533625,1844.208334)
+x100_epr-jerem_10pct_002_A011_I.tif; ; (1850.814012,1844.225323)
+x100_epr-jerem_10pct_002_A012_I.tif; ; (2774.673026,1844.409808)
