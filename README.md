@@ -6,24 +6,22 @@ This code represents an addition to the extensive and varied literature on image
 
 ## Dependencies
 
-* See requirements.txt 
+* Please see requirements.txt 
 
 ## Authors
-This software was developed by:
+This library was developed by:
 
     Ali Rouwane 
     Damien Texier 
     Jean-Charles Passieux
 
-All members of the Institut Clément Ader, Toulouse, France, this project was granted by the European Research Council [project HT-S$_{4}$DefOx - Grant number 948007]
+All members of the Institut Clément Ader, Toulouse, France.
+
+This project was granted by the European Research Council, 
+project **HT-** $S_4$ **DefOx** - Grant number 948007. 
+
+## Contributions 
+Bug Reports, feature Requests, pull Requests, documentation enhancement are welcome. Thank you.
 
 ## License
-This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details                  
-
-
-
-
-
-
-License
-This software is open source distributed under license MIT.
+This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details.                  
