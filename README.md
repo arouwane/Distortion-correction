@@ -18,7 +18,7 @@ This software was developed by:
 All members of the Institut Clément Ader, Toulouse, France.
 
 This project was granted by the European Research Council, 
-project **HT** - $S_4$ **DefOx** - Grant number 948007 
+project **HT - $S_4$ **DefOx ** - Grant number 948007 
 
 ## License
 This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details                  
