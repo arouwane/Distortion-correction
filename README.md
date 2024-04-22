@@ -18,7 +18,10 @@ This library was developed by:
 All members of the Institut Clément Ader, Toulouse, France.
 
 This project was granted by the European Research Council, 
-project **HT-** $S_4$ **DefOx** - Grant number 948007 
+project **HT-** $S_4$ **DefOx** - Grant number 948007. 
+
+## Contributions 
+Help, Bug Reports, Feature Requests, Pull Requests and Documentation enhancement are welcomed.
 
 ## License
-This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details                  
+This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details.                  
