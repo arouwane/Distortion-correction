@@ -21,7 +21,7 @@ This project was granted by the European Research Council,
 project **HT-** $S_4$ **DefOx** - Grant number 948007. 
 
 ## Contributions 
-Help, Bug Reports, Feature Requests, Pull Requests and Documentation enhancement are welcomed.
+Bug Reports, feature Requests, pull Requests, documentation enhancement are welcome. Thank you.
 
 ## License
 This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details.                  
