@@ -22,11 +22,3 @@ project **HT-** $S_4$ **DefOx** - Grant number 948007
 
 ## License
 This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details                  
-
-
-
-
-
-
-License
-This software is open source distributed under license MIT.
