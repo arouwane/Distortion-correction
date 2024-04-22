@@ -6,7 +6,7 @@ This code represents an addition to the extensive and varied literature on image
 
 ## Dependencies
 
-* See requirements.txt 
+* Please see requirements.txt 
 
 ## Authors
 This library was developed by:
