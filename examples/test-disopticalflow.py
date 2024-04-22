@@ -4,16 +4,9 @@ import numpy as np
 import scipy as sp
 from skimage.filters import gaussian
 
-file0 = 'F:/sauvegarde-Crucial-X6-PostDoc/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/x100_11x11_stitch_A001_I.tif' 
-file1 = 'F:/sauvegarde-Crucial-X6-PostDoc/_Pour Ali/DIC_3D_Confocal_prio/5-3_etap1/5-3_Rp0.1__210820_094537/intensity/5-3_Rp0.1__000_A001_I.tif' 
-
-#file0 = 'F:/sauvegarde-Crucial-X6-PostDoc/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/corrected_intensity/x100_11x11_stitch_A001_I.tif' 
-#file1 = 'F:/sauvegarde-Crucial-X6-PostDoc/_Pour Ali/DIC_3D_Confocal_prio/5-3_etap1/5-3_Rp0.1__210820_094537/corrected_intensity/5-3_Rp0.1__000_A001_I.tif' 
-
-
-file0 = 'F:/sauvegarde-Crucial-X6-PostDoc/_Pour Ali/DIC_3D_Confocal_prio/5-3_ref/x100_11x11_stitch_210817_101427/intensity/Fused_Fiji_linear_blending.tif'
-file1 = 'F:/sauvegarde-Crucial-X6-PostDoc/_Pour Ali\DIC_3D_Confocal_prio/5-3_etap1/5-3_Rp0.1__210820_094537/intensity/Fused_Fiji_linear_blending.tif'
-
+file0 = 'examples/data/lsclm_tensile_test/Ref/mosaic.tif' 
+file1 = 'examples/data/lsclm_tensile_test/State2/mosaic.tif' 
+ 
 f0  =  cv2.cvtColor( cv2.imread(file0), cv2.COLOR_BGR2GRAY) 
 f1  =  cv2.cvtColor( cv2.imread(file1), cv2.COLOR_BGR2GRAY) 
 
