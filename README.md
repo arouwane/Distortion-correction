@@ -19,11 +19,3 @@ All members of the Institut Clément Ader, Toulouse, France, this project was gr
 
 ## License
 This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details                  
-
-
-
-
-
-
-License
-This software is open source distributed under license MIT.
