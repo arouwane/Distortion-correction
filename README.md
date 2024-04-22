@@ -9,7 +9,7 @@ This code represents an addition to the extensive and varied literature on image
 * See requirements.txt 
 
 ## Authors
-This software was developed by:
+This library was developed by:
 
     Ali Rouwane 
     Damien Texier 
