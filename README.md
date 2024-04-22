@@ -15,7 +15,7 @@ This software was developed by:
     Damien Texier 
     Jean-Charles Passieux
 
-All members of the Institut Clément Ader, Toulouse, France, this project was granted by the European Research Council, project HT-S$_4$DefOx - Grant number 948007 
+All members of the Institut Clément Ader, Toulouse, France, this project was granted by the European Research Council, project HT-$S_4$DefOx - Grant number 948007 
 
 ## License
 This project is licensed under the  CC0-1.0 License - see the LICENSE.md file for details                  
