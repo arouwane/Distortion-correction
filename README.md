@@ -4,7 +4,7 @@ Provided sufficient grey-level gradient (speckle like texture), a distortion fun
 The identified fields enable the subsequent correction of mosaic images, leading to improved stitching results. 
 This code represents an addition to the extensive and varied literature on image stitching.
 
-### Dependencies
+## Dependencies
 
 * See requirements.txt 
 
