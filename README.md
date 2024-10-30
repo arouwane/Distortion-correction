@@ -1,5 +1,5 @@
 # Distortion-correction
-"This repository contains code associated with the paper 
+This repository contains code associated with the paper 
 'High Resolution and Large Field of View Imaging Using a Stitching Procedure Coupled with Distortion Corrections' 
 (https://doi.org/10.1016/j.optlastec.2024.111165)
 An open-source library designed for automatically identifying distortion fields within image mosaics.
